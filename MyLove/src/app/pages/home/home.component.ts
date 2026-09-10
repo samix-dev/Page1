@@ -279,7 +279,9 @@ export class HomeComponent {
   createLink() {
     if (!this.creatorName.trim() || !this.loverName.trim()) return;
     const token = this.loveService.create(this.creatorName, this.loverName);
-    this.link.set(window.location.origin + '/love/' + token);
+    const baseHref = typeof document !== 'undefined' ? (document.querySelector('base')?.getAttribute('href') || '/') : '/';
+    const path = baseHref.replace(/\/$/, '') + '/love/' + encodeURIComponent(token);
+    this.link.set(window.location.origin + path);
   }
 
   copyLink() {

@@ -11,66 +11,66 @@ import { animate, style, transition, trigger } from '@angular/animations';
 
 type Step = 'welcome' | 'question' | 'result';
 
-@Component({
-  selector: 'app-questionnaire',
-  standalone: true,
-  imports: [CommonModule, RouterModule, LoveQuestionComponent, HeartAnimationComponent, LoveBackgroundComponent, NotFoundComponent],
-  animations: [
-    trigger('fadeInUp', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(20px)' }),
-        animate('0.5s ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+  @Component({
+    selector: 'app-questionnaire',
+    standalone: true,
+    imports: [CommonModule, RouterModule, LoveQuestionComponent, HeartAnimationComponent, LoveBackgroundComponent, NotFoundComponent],
+    animations: [
+      trigger('fadeInUp', [
+        transition(':enter', [
+          style({ opacity: 0, transform: 'translateY(20px)' }),
+          animate('0.5s ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+        ])
       ])
-    ])
-  ],
-  template: `
-    <app-love-background></app-love-background>
-    <app-heart-animation [trigger]="showHearts()"></app-heart-animation>
+    ],
+    template: `
+      <app-love-background></app-love-background>
+      <app-heart-animation [trigger]="showHearts()"></app-heart-animation>
 
-    <div class="questionnaire-page" *ngIf="questionnaire; else notFound">
-      <div class="container">
-        <div *ngIf="step() === 'welcome'" class="welcome-section" @fadeInUp>
-          <div class="welcome-icon">👋</div>
-          <h1 class="welcome-title">سلام!</h1>
-          <p class="welcome-text">
-            {{ questionnaire.creatorName }} برای {{ questionnaire.loverName }} یه سوالایی داره... 😍
-          </p>
-          <button class="start-btn" (click)="startQuestions()">
-            شروع پرسشنامه 💕
-          </button>
-        </div>
-
-        <div *ngIf="step() === 'question' && currentQuestion()" class="question-section" @fadeInUp>
-          <app-love-question
-            [question]="currentQuestion()"
-            [current]="currentIndex() + 1"
-            [total]="questions.length"
-            (answered)="onAnswered($event)"
-          ></app-love-question>
-        </div>
-
-        <div *ngIf="step() === 'result'" class="result-section" @fadeInUp>
-          <div class="result-card">
-            <div class="result-icon">❤️</div>
-            <h1 class="result-title">نتیجه مشخص شد! ❤️</h1>
-            <p class="result-text">
-              {{ questionnaire.loverName }}، ظاهراً {{ questionnaire.creatorName }} اینجا خیلی دوستت داره 😍
+      <div class="questionnaire-page" *ngIf="questionnaire; else notFound">
+        <div class="container">
+          <div *ngIf="step() === 'welcome'" class="welcome-section" @fadeInUp>
+            <div class="welcome-icon">👋</div>
+            <h1 class="welcome-title">سلام!</h1>
+            <p class="welcome-text">
+              {{ questionnaire.creatorName }} برای {{ questionnaire.loverName }} یه سوالایی داره... 😍
             </p>
-            <p class="result-subtitle">
-              تبریک! به نظر میاد عشق بین شما دوطرفه‌ست! 💕
-            </p>
-            <button class="home-btn" routerLink="/">
-              منم یه لینک عاشقانه بسازم 💕
+            <button class="start-btn" (click)="startQuestions()">
+              شروع پرسشنامه 💕
             </button>
+          </div>
+
+          <div *ngIf="step() === 'question' && currentQuestion()" class="question-section" @fadeInUp>
+            <app-love-question
+              [question]="currentQuestion()"
+              [current]="currentIndex() + 1"
+              [total]="questions.length"
+              (answered)="onAnswered($event)"
+            ></app-love-question>
+          </div>
+
+          <div *ngIf="step() === 'result'" class="result-section" @fadeInUp>
+            <div class="result-card">
+              <div class="result-icon">❤️</div>
+              <h1 class="result-title">نتیجه مشخص شد! ❤️</h1>
+              <p class="result-text">
+                {{ questionnaire.loverName }}، ظاهراً {{ questionnaire.creatorName }} اینجا خیلی دوستت داره 😍
+              </p>
+              <p class="result-subtitle">
+                تبریک! به نظر میاد عشق بین شما دوطرفه‌ست! 💕
+              </p>
+              <button class="home-btn" routerLink="/">
+                منم یه لینک عاشقانه بسازم 💕
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <ng-template #notFound>
-      <app-not-found></app-not-found>
-    </ng-template>
-  `,
+      <ng-template #notFound>
+        <app-not-found></app-not-found>
+      </ng-template>
+    `,
   styles: [`
     .questionnaire-page {
       position: relative;
@@ -203,6 +203,7 @@ export class QuestionnaireComponent implements OnInit {
   currentIndex = signal(0);
   showHearts = signal(false);
   questions: Question[] = [];
+  isAnswering = signal(false);
 
   constructor(
     private route: ActivatedRoute,
@@ -212,7 +213,7 @@ export class QuestionnaireComponent implements OnInit {
   ngOnInit() {
     const token = this.route.snapshot.paramMap.get('id');
     if (token) {
-      this.questionnaire = this.loveService.parseToken(token);
+      this.questionnaire = this.loveService.parseToken(decodeURIComponent(token));
       if (this.questionnaire) {
         this.questions = QUESTIONS.map((q: Question) => ({
           ...q,
@@ -234,6 +235,9 @@ export class QuestionnaireComponent implements OnInit {
   }
 
   onAnswered(answer: string) {
+    if (this.isAnswering()) return;
+    this.isAnswering.set(true);
+
     this.showHearts.set(true);
     setTimeout(() => {
       this.showHearts.set(false);
@@ -245,6 +249,7 @@ export class QuestionnaireComponent implements OnInit {
       } else {
         this.step.set('result');
       }
+      this.isAnswering.set(false);
     }, 1200);
   }
 }
