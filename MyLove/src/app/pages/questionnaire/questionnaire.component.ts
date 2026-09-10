@@ -215,7 +215,12 @@ export class QuestionnaireComponent implements OnInit {
     if (token) {
       this.questionnaire = this.loveService.parseToken(decodeURIComponent(token));
       if (this.questionnaire) {
-        this.questions = QUESTIONS.map((q: Question) => ({
+        const count = this.questionnaire.questionCount || 10;
+        const selectedIds = this.questionnaire.selectedQuestionIds || [];
+        let selectedQuestions = QUESTIONS.filter(q => selectedIds.includes(q.id));
+        const remainingQuestions = QUESTIONS.filter(q => !selectedIds.includes(q.id));
+        selectedQuestions = [...selectedQuestions, ...remainingQuestions].slice(0, count);
+        this.questions = selectedQuestions.map((q: Question) => ({
           ...q,
           text: q.text
             .replace('{creator}', this.questionnaire!.creatorName)

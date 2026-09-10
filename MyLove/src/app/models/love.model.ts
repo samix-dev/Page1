@@ -1,6 +1,8 @@
 export interface LoveQuestionnaire {
   creatorName: string;
   loverName: string;
+  questionCount?: number;
+  selectedQuestionIds?: number[];
 }
 
 export interface Question {

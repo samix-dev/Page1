@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LoveService } from '../../services/love.service';
 import { LoveBackgroundComponent } from '../../components/love-background/love-background.component';
+import { Question, QUESTIONS } from '../../models/love.model';
 import { animate, style, transition, trigger } from '@angular/animations';
 
 @Component({
@@ -56,6 +57,30 @@ import { animate, style, transition, trigger } from '@angular/animations';
               (keyup.enter)="createLink()"
             />
           </div>
+
+          <div class="form-group">
+            <div class="questions-toggle" (click)="showQuestions.set(!showQuestions())">
+              <span>{{ showQuestions() ? 'مخفی کردن سوالات' : 'انتخاب سوالات دلخواه' }}</span>
+              <span class="selected-badge">{{ getSelectedQuestions().length }} سوال انتخاب شده</span>
+              <span class="toggle-icon">{{ showQuestions() ? '▲' : '▼' }}</span>
+            </div>
+
+            <div *ngIf="showQuestions()" class="questions-list">
+              <div class="questions-header">
+                <span class="selected-count">{{ getSelectedQuestions().length }} سوال انتخاب شده</span>
+              </div>
+              <div class="questions-container">
+                <div *ngFor="let q of getDisplayQuestions()" class="question-item" [class.selected]="isSelected(q.id)">
+                  <label class="question-label">
+                    <input type="checkbox" [checked]="isSelected(q.id)" (change)="toggleQuestion(q.id)" />
+                    <span class="question-text">{{ q.text.replace('{creator}', creatorName || 'تو').replace('{lover}', loverName || 'عشق') }}</span>
+                    <span class="question-number">#{{ q.id }}</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <button
             class="create-btn"
             (click)="createLink()"
@@ -266,6 +291,118 @@ import { animate, style, transition, trigger } from '@angular/animations';
       box-shadow: 0 4px 20px rgba(233, 30, 99, 0.2);
       display: inline-block;
     }
+    .questions-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #fce4ec, #f8bbd0);
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #4a2c4a;
+      transition: all 0.2s ease;
+    }
+    .questions-toggle:hover {
+      background: linear-gradient(135deg, #f8bbd0, #f48fb1);
+    }
+    .selected-badge {
+      background: #e91e63;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .toggle-icon {
+      font-size: 12px;
+      transition: transform 0.2s ease;
+    }
+    .questions-list {
+      margin-top: 12px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    .questions-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(233, 30, 99, 0.2);
+    }
+    .selected-count {
+      font-size: 13px;
+      color: #e91e63;
+      font-weight: 600;
+    }
+    .questions-container {
+      max-height: 280px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .question-item {
+      transition: all 0.2s ease;
+    }
+    .question-item.selected {
+      order: -1;
+    }
+    .question-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: #fff;
+      border-radius: 10px;
+      border: 2px solid #f8bbd0;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .question-label:hover {
+      border-color: #ee5a6f;
+      background: #fff5f6;
+    }
+    .question-item.selected .question-label {
+      border-color: #e91e63;
+      background: #fff0f3;
+      box-shadow: 0 0 0 2px rgba(233, 30, 99, 0.1);
+    }
+    .question-label input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: #e91e63;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .question-text {
+      flex: 1;
+      font-size: 13px;
+      color: #2d1f2d;
+      line-height: 1.4;
+      text-align: right;
+    }
+    .question-number {
+      font-size: 11px;
+      color: #c9a0b0;
+      font-weight: 600;
+      background: #fce4ec;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    .questions-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    .questions-container::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .questions-container::-webkit-scrollbar-thumb {
+      background: #f8bbd0;
+      border-radius: 3px;
+    }
   `]
 })
 export class HomeComponent {
@@ -274,11 +411,43 @@ export class HomeComponent {
   link = signal('');
   copied = signal(false);
 
+  allQuestions = QUESTIONS;
+  selectedQuestionIds = signal<number[]>([]);
+  showQuestions = signal(false);
+
   constructor(private loveService: LoveService, private router: Router) {}
+
+  getSelectedQuestions() {
+    return this.selectedQuestionIds();
+  }
+
+  getDisplayQuestions(): Question[] {
+    const selected = new Set(this.selectedQuestionIds());
+    return [...this.allQuestions].sort((a, b) => {
+      const aSel = selected.has(a.id);
+      const bSel = selected.has(b.id);
+      if (aSel && !bSel) return -1;
+      if (!aSel && bSel) return 1;
+      return a.id - b.id;
+    });
+  }
+
+  isSelected(id: number) {
+    return this.selectedQuestionIds().includes(id);
+  }
+
+  toggleQuestion(id: number) {
+    const current = this.selectedQuestionIds();
+    if (current.includes(id)) {
+      this.selectedQuestionIds.set(current.filter(x => x !== id));
+    } else {
+      this.selectedQuestionIds.set([...current, id]);
+    }
+  }
 
   createLink() {
     if (!this.creatorName.trim() || !this.loverName.trim()) return;
-    const token = this.loveService.create(this.creatorName, this.loverName);
+    const token = this.loveService.create(this.creatorName, this.loverName, this.selectedQuestionIds().length, this.selectedQuestionIds());
     const baseHref = typeof document !== 'undefined' ? (document.querySelector('base')?.getAttribute('href') || '/') : '/';
     const path = baseHref.replace(/\/$/, '') + '/love/' + encodeURIComponent(token);
     this.link.set(window.location.origin + path);
@@ -297,7 +466,7 @@ export class HomeComponent {
     if (navigator.share) {
       navigator.share({
         title: 'تست عاشقانه',
-        text: 'برای من یه.test عاشقانه بساز! ❤️',
+        text: 'برای من یه تست عاشقانه بساز! ❤️',
         url: this.link()
       }).catch(() => {});
     } else {
