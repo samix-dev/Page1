@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Redirecting...</title>
+  <script>
+    (function() {
+      var pathSegments = window.location.pathname.split('/');
+      var pageIndex = pathSegments.indexOf('Page1');
+      if (pageIndex === -1) pageIndex = 0;
+      var newPath = pathSegments.slice(pageIndex + 1).join('/');
+      if (newPath.startsWith('404.html')) newPath = newPath.replace('404.html', '');
+      var redirectUrl = window.location.origin + '/' + pathSegments.slice(0, pageIndex + 1).join('/') + '/index.html' + (newPath ? '/' + newPath : '');
+      window.location.replace(redirectUrl);
+    })();
+  </script>
+</head>
+<body>
+  Redirecting to main page...
+</body>
+</html>
