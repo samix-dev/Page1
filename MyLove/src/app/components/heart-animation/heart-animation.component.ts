@@ -10,9 +10,11 @@ import { CommonModule } from '@angular/common';
       <div
         *ngFor="let h of burstHearts"
         class="hearts-burst"
-        [style.left.px]="h.x + 'px'"
-        [style.top.px]="h.y + 'px'"
-        [style.animation-delay]="h.delay + 'ms'"
+        [style.left.px]="h.x"
+        [style.top.px]="h.y"
+        [style.--dx]="h.dx"
+        [style.--dy]="h.dy"
+        [style.animation-delay.ms]="h.delay"
       >
         {{ h.emoji }}
       </div>
