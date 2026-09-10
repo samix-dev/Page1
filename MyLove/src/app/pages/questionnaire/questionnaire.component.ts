@@ -43,7 +43,7 @@ type Step = 'welcome' | 'question' | 'result';
           <div *ngIf="step() === 'question' && currentQuestion()" class="question-section" @fadeInUp>
             <app-love-question
               [question]="currentQuestion()"
-              [current]="currentIndex() + 1"
+              [current]="currentIndex()"
               [total]="questions.length"
               (answered)="onAnswered($event)"
             ></app-love-question>
