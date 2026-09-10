@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://samix-dev.github.io/Page1/sitemap.xml
