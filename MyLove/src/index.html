@@ -10,6 +10,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script>
+    (function() {
+      var redirect = sessionStorage.getItem('gh-pages-redirect');
+      if (redirect) {
+        sessionStorage.removeItem('gh-pages-redirect');
+        var base = document.querySelector('base');
+        var baseHref = base ? base.getAttribute('href') : '/';
+        var newUrl = window.location.origin + baseHref + redirect;
+        window.history.replaceState(null, '', newUrl);
+      }
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>
